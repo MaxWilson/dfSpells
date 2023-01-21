@@ -14,10 +14,18 @@ let Counter() =
     ]
 
 open Spells
+
+
+type SpellData = {
+    data: Spell
+    prereqs: PrereqData list
+    }
+and PrereqData = Expanded of Spell * Prereq | Unexpanded of Prereq
+
 [<ReactComponent>]
-let Spell (spell:Spell) =
+let Spell (spell:SpellData) =
     Html.div [
-        Html.h3 spell.name
+        Html.h3 spell.data.name
         for p in spell.prereqs do
             let class' (className: string) ctor (children: _ list) = ctor [prop.children children; prop.className className]
             let classTxt (className: string) ctor (txt: string) = ctor [prop.text txt; prop.className className]
