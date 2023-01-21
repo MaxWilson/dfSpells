@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {
         "start": "dotnet fable watch src --sourceMaps --run vite",
-        "build": "dotnet fable src --sourceMaps --run vite build",
+        "build": "dotnet fable src --sourceMaps --run vite build --base dfSpells",
         "serve": "vite serve",
         "prestart": "dotnet tool restore",
         "prebuild": "dotnet tool restore",

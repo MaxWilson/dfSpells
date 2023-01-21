@@ -5,7 +5,7 @@ open App
 open Browser.Dom
 open Fable.Core.JsInterop
 
-importSideEffects "./styles/global.scss"
+importSideEffects "./styles.sass"
 
 ReactDOM.render(
     Components.Spells(),

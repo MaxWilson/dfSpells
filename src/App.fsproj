@@ -3,6 +3,7 @@
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
+        <None Include="styles.sass" />
         <Compile Include="Spells.fs" />
         <None Include="index.html" />
         <Compile Include="Extensions.fs" />
