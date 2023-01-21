@@ -16,6 +16,7 @@ let Counter() =
 [<ReactComponent>]
 let Spells() =
     Html.div [
+        Html.h1 "Spells"
         for spell in Spells.spells do
             Html.h3 spell.name
         ]
