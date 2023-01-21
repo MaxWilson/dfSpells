@@ -30,13 +30,14 @@ let spellLookup = spells |> List.map (fun s -> s.name, s) |> Map.ofList
 [<ReactComponent>]
 let rec Spell (spell:Spell, magicType: MagicType option) =
     let byMagicType = spell.prereqs |> List.filter (fun p -> magicType = None || magicType = Some p.heading)
+    let isTopLevel = magicType.IsNone
     let tryOpen() =
         match byMagicType with
         | [{ items = [_onlyOneChain] }] -> Some(0,0) // if there's only one possible option, choose it
         | _ -> None
-    let choice, update = React.useState(if magicType.IsSome then tryOpen() else None)
+    let choice, update = React.useState(if isTopLevel then None else tryOpen())
     Html.div [
-        Html.h3 spell.name
+        Html.div [prop.className "spellHeader"; prop.text spell.name]
         for p, pix in byMagicType |> List.number do
             for chain, cix in p.items |> List.number do
                 let prereqs = System.String.Join(" and ", chain)
@@ -46,7 +47,10 @@ let rec Spell (spell:Spell, magicType: MagicType option) =
                     else update None
                 class' "prereqs" Html.div [
                     Html.input [prop.type'.checkbox; prop.isChecked isSelected; prop.onClick(toggle)]
-                    Html.label [prop.text $"{p.heading}: {prereqs}"; prop.className "label"; prop.onClick(toggle)]
+                    // don't need to show e.g. "Wizardly" at every single level
+                    let descr = if isTopLevel then $"{p.heading}: {prereqs}"
+                                else prereqs
+                    Html.label [prop.text descr; prop.className "label"; prop.onClick(toggle)]
                     if isSelected then
                         for prereqName in chain do
                             match spellLookup |> Map.tryFind prereqName with
