@@ -15,6 +15,14 @@ let Counter() =
 
 open Spells
 
+[<AutoOpen>]
+module Regex =
+    open System.Text.RegularExpressions
+    let (|ParseRegex|_|) regex str =
+       let m = Regex(regex).Match(str)
+       if m.Success
+       then Some (List.tail [ for x in m.Groups -> x.Value ])
+       else None
 module Tup2 =
     let create x y = x,y
 module List =
@@ -46,7 +54,7 @@ let rec Spell (spell:Spell, magicType: MagicType option) =
                     if not isSelected then update (Some(pix, cix))
                     else update None
                 class' "prereqs" Html.div [
-                    Html.input [prop.type'.checkbox; prop.isChecked isSelected; prop.onClick(toggle)]
+                    Html.input [prop.type'.checkbox; prop.isChecked isSelected; prop.readOnly true; prop.onClick(toggle)]
                     // don't need to show e.g. "Wizardly" at every single level
                     let descr = if isTopLevel then $"{p.heading}: {prereqs}"
                                 else prereqs
@@ -56,7 +64,16 @@ let rec Spell (spell:Spell, magicType: MagicType option) =
                             match spellLookup |> Map.tryFind prereqName with
                             | Some spell ->
                                 class' "drilldown" Html.div [Spell (spell, Some p.heading)]
-                            | None -> ()
+                            | None ->
+                                match prereqName with
+                                | ParseRegex "(.*) including (.*)" [preamble; spellName] ->
+                                    class' "drilldown" Html.div [Html.div [prop.className "spellHeader"; prop.text preamble]]
+                                    match spellLookup |> Map.tryFind spellName with
+                                    | Some spell ->
+                                        class' "drilldown" Html.div [Spell (spell, Some p.heading)]
+                                    | _ -> failwith $"shouldn't happen {spellName}"
+                                | _ ->
+                                    class' "drilldown" Html.div [Html.div [prop.className "spellHeader"; prop.text prereqName]]
                     ]
         ]
 
