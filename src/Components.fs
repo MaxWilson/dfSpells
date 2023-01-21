@@ -14,16 +14,46 @@ let Counter() =
     ]
 
 open Spells
+
+module Tup2 =
+    let create x y = x,y
+module List =
+    let number lst = lst |> List.mapi (fun ix v -> v, ix)
+
+[<AutoOpen>]
+module Html =
+    let class' (className: string) ctor (children: _ list) = ctor [prop.children children; prop.className className]
+    let classTxt (className: string) ctor (txt: string) = ctor [prop.text txt; prop.className className]
+
+let spellLookup = spells |> List.map (fun s -> s.name, s) |> Map.ofList
+
 [<ReactComponent>]
-let Spell (spell:Spell) =
+let rec Spell (spell:Spell, magicType: MagicType option) =
+    let byMagicType = spell.prereqs |> List.filter (fun p -> magicType = None || magicType = Some p.heading)
+    let tryOpen() =
+        match byMagicType with
+        | [{ items = [_onlyOneChain] }] -> Some(0,0) // if there's only one possible option, choose it
+        | _ -> None
+    let choice, update = React.useState(if magicType.IsSome then tryOpen() else None)
     Html.div [
         Html.h3 spell.name
-        for p in spell.prereqs do
-            let class' (className: string) ctor (children: _ list) = ctor [prop.children children; prop.className className]
-            let classTxt (className: string) ctor (txt: string) = ctor [prop.text txt; prop.className className]
-            for chain in p.items do
+        for p, pix in byMagicType |> List.number do
+            for chain, cix in p.items |> List.number do
                 let prereqs = System.String.Join(" and ", chain)
-                classTxt "prereq" Html.div $"{p.heading}: {prereqs}"
+                let isSelected = choice = (Some(pix, cix))
+                let toggle _ =
+                    if not isSelected then update (Some(pix, cix))
+                    else update None
+                class' "prereqs" Html.div [
+                    Html.input [prop.type'.checkbox; prop.isChecked isSelected; prop.onClick(toggle)]
+                    Html.label [prop.text $"{p.heading}: {prereqs}"; prop.className "label"; prop.onClick(toggle)]
+                    if isSelected then
+                        for prereqName in chain do
+                            match spellLookup |> Map.tryFind prereqName with
+                            | Some spell ->
+                                class' "drilldown" Html.div [Spell (spell, Some p.heading)]
+                            | None -> ()
+                    ]
         ]
 
 [<ReactComponent>]
@@ -31,5 +61,5 @@ let Spells() =
     Html.div [
         Html.h1 "Spells"
         for spell in Spells.spells do
-            Spell spell
+            Spell (spell, None)
         ]
