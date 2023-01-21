@@ -37,7 +37,7 @@ let rec Spell (spell:Spell, magicType: MagicType option) =
         | _ -> None
     let choice, update = React.useState(if isTopLevel then None else tryOpen())
     Html.div [
-        Html.div [prop.className "spellHeader"; prop.text spell.name]
+        Html.div [prop.className "spellHeader"; prop.text $"{spell.name} ({spell.college})"]
         for p, pix in byMagicType |> List.number do
             for chain, cix in p.items |> List.number do
                 let prereqs = System.String.Join(" and ", chain)
