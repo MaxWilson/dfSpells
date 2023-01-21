@@ -18,15 +18,19 @@ open Spells
 
 type SpellData = {
     data: Spell
-    prereqs: PrereqData list
+    chains: PotentialChain list
     }
-and PrereqData = Expanded of Spell * Prereq | Unexpanded of Prereq
+and PotentialChain = {
+    heading: MagicType
+    items: PrereqData list list
+}
+and PrereqData = Expanded of Spell | Unexpanded of string
 
 [<ReactComponent>]
 let Spell (spell:SpellData) =
     Html.div [
         Html.h3 spell.data.name
-        for p in spell.prereqs do
+        for p in spell.chains do
             let class' (className: string) ctor (children: _ list) = ctor [prop.children children; prop.className className]
             let classTxt (className: string) ctor (txt: string) = ctor [prop.text txt; prop.className className]
             for chain in p.items do
