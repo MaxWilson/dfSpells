@@ -85,49 +85,49 @@ let debounce ms f =
       Browser.Dom.window.clearTimeout threadId.Value
     threadId <- Browser.Dom.window.setTimeout ((fun _ -> f v; threadId <- None), ms) |> Some
 
+let class' (classname: string) ctor (children: seq<ReactElement>) =
+  ctor [prop.className classname; prop.children children]
+
 [<ReactComponent>]
 let Spells() =
     let nameFilter, updateNameFilter = React.useState ""
     let allCollege = "All colleges"
     let collegeFilter, updateCollegeFilter = React.useState allCollege
-    let nameInput = (debounce 300 updateNameFilter)
+    let nameInput = (debounce 100 updateNameFilter)
     Html.div [
-        Html.div [
-          prop.className "stickyHeader"
-          prop.children [
-            Html.legend "Search:"
-            Html.input [
-              prop.valueOrDefault nameFilter
-              prop.autoFocus true
-              prop.onChange nameInput
+        class' "stickyHeader" Html.div [
+          Html.legend "Search:"
+          Html.input [
+            prop.valueOrDefault nameFilter
+            prop.autoFocus true
+            prop.onChange nameInput
+            ]
+          Html.select [
+            prop.id "collegeFilter"
+            prop.onChange (updateCollegeFilter)
+            prop.children [
+              Html.option allCollege
+              for c in colleges do
+                Html.option c
               ]
-            Html.select [
-              prop.id "collegeFilter"
-              prop.onChange (updateCollegeFilter)
-              prop.children [
-                Html.option allCollege
-                for c in colleges do
-                  Html.option c
-                ]
-              prop.value collegeFilter
-              ]
-            Html.button [
-              prop.text "Clear"
-              prop.onClick (fun _ ->
-                updateCollegeFilter allCollege
-                updateNameFilter ""
-                nameInput "" // make sure debounce doesn't override the blank filter
-                )
-              ]
+            prop.value collegeFilter
+            ]
+          Html.button [
+            prop.text "Clear"
+            prop.onClick (fun _ ->
+              updateCollegeFilter allCollege
+              updateNameFilter ""
+              nameInput "" // make sure debounce doesn't override the blank filter
+              )
             ]
           ]
-
-        Html.h1 "Spells"
-
-        let nameFilter = nameFilter.ToLowerInvariant()
-        let collegeFilter = collegeFilter.ToLowerInvariant()
-        for spell in Spells.spells do
-          if (nameFilter = "" || spell.name.ToLowerInvariant().Contains nameFilter)
-              && (collegeFilter = "all colleges" || spell.college.ToLowerInvariant().Contains collegeFilter) then
-            Spell (spell, None)
+        class' "body" Html.div [
+          Html.h1 "Spells"
+          let nameFilter = nameFilter.ToLowerInvariant().Trim()
+          let collegeFilter = collegeFilter.ToLowerInvariant().Trim()
+          for spell in Spells.spells do
+            if (nameFilter = "" || spell.name.ToLowerInvariant().Contains nameFilter)
+                && (collegeFilter = "all colleges" || spell.college.ToLowerInvariant().Contains collegeFilter) then
+              Spell (spell, None)
+          ]
         ]
